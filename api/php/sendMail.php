@@ -1,10 +1,8 @@
 <?php
-
-require '../../vendor/autoload.php';
 use PHPMailer\PHPMailer\PHPMailer;
 
-// Verifica si se ha enviado una solicitud POST
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
+
+ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Obtiene el contenido del cuerpo de la solicitud
     $json = file_get_contents('php://input');
     // Decodifica el JSON en un array asociativo
@@ -17,14 +15,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit;
     }
     // Verifica si se proporcionaron los datos necesarios
-    if (!isset($datos['mailTo']) || !isset($datos['subject'])) {
-        http_response_code(400); // Código de respuesta HTTP 400: Solicitud incorrecta
-        echo 'Error: Los datos proporcionados son insuficientes.';
+    if (!isset($datos['mailTo']) || !isset($datos['nameFile'])) {
+        http_response_code(400); 
+        echo 'Error: Los datos proporcionados son insuficientes. Solicitud incorrecta';
         exit;
     }
     // Obtiene los datos del formulario
     $destinatario = $datos['mailTo'];
-    $asunto = $datos['subject'];
+    $adjunto = $datos['nameFile'];
 
     // Crea una nueva instancia de PHPMailer
     $mail = new PHPMailer;
@@ -37,18 +35,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $mail->Password = 'Mexico_123';
     $mail->setFrom('larp-transport@solu-tec.net', 'LARP');
     $mail->addReplyTo('larp@larptransport.com', 'Larp Transport');
-    $mail->addAddress($destinatario); // Usa el destinatario recibido dinámicamente
-    $mail->Subject = $asunto; // Usa el asunto recibido dinámicamente
+    // $mail->addAddress('larp@larptransport.com', 'Larp Transport');
+    $mail->addAddress('ij.innovaciones@gmail.com', 'Ij Innovaciones');
+    $mail->addAddress($destinatario); // Destinatario recibido dinámicamente
+    $mail->Subject = 'Cotizacon No: '.$adjunto; 
     $mail->msgHTML(file_get_contents('message.html'), __DIR__);
-    $mail->Body = 'This is just a plain text message body.';
-    $mail->addAttachment('../pdfs/cotizacion.pdf');
+    $mail->Body = 'Tu cotizacion esta lista';
+    $mail->addAttachment('cotizaciones/'.$adjunto);
     if (!$mail->send()) {
-        echo 'Mailer Error: ' . $mail->ErrorInfo;
+        echo json_encode(["error" => 'Mailer Error: ' . $mail->ErrorInfo]);
+
     } else {
         echo 'The email message was sent.';
+        echo json_encode(["error" => 'The email message was sent.']);
     }
-} else {
-    echo 'Error: No se ha enviado una solicitud POST.';
-}
+ } else {
+    echo json_encode(["error" => 'Error: Bad Request.']);
+ }
 
 ?>
